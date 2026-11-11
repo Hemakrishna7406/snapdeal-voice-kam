@@ -49,9 +49,14 @@ client = SarvamAI(api_subscription_key=_KEY)
 CHAT_MODEL = "sarvam-105b-conversations"
 STT_MODEL = "saaras:v3"
 TTS_MODEL = "bulbul:v3"
-SPEAKER = {"hi-IN": "priya", "en-IN": "ishita", "bn-IN": "priya", "ta-IN": "priya",
-           "te-IN": "priya", "mr-IN": "priya", "gu-IN": "priya", "kn-IN": "priya",
-           "ml-IN": "priya", "pa-IN": "priya", "od-IN": "priya"}
+SPEAKER = {"hi-IN": "ritu_hi_customer", "en-IN": "ishita_en_customer", "bn-IN": "priya",
+           "ta-IN": "priya", "te-IN": "kavitha_te_conversation", "mr-IN": "ishita_mr_conversational",
+           "gu-IN": "pooja_gu_customer", "kn-IN": "chaitra_kn_conversation",
+           "ml-IN": "priya", "pa-IN": "anand_pa_customer", "or-IN": "priya"}
+# Fallback map: generic speaker per language for codes without a specialised voice
+SPEAKER_FALLBACK = {"hi-IN": "priya", "en-IN": "ishita", "bn-IN": "priya", "ta-IN": "priya",
+                    "te-IN": "priya", "mr-IN": "priya", "gu-IN": "priya", "kn-IN": "priya",
+                    "ml-IN": "priya", "pa-IN": "priya", "or-IN": "priya"}
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC = BASE_DIR / "static"
@@ -199,14 +204,27 @@ def tts(req: TtsRequest) -> Response:
     if not text:
         raise HTTPException(status_code=400, detail="empty text")
     lang = req.lang if req.lang in SPEAKER else "en-IN"
+    speaker = SPEAKER.get(lang, "ishita")
     try:
         res = client.text_to_speech.convert(
-            text=text[:490], language_code=lang, speaker=SPEAKER[lang],
+            text=text[:490], language_code=lang, speaker=speaker,
             model=TTS_MODEL, output_audio_codec="wav",
         )
         audio = base64.b64decode(res.audios[0])
-    except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=502, detail=f"text-to-speech failed: {type(exc).__name__}") from exc
+    except Exception:  # noqa: BLE001
+        # Fall back to a generic speaker if the specialised one is unavailable
+        fallback = SPEAKER_FALLBACK.get(lang, "ishita")
+        if fallback != speaker:
+            try:
+                res = client.text_to_speech.convert(
+                    text=text[:490], language_code=lang, speaker=fallback,
+                    model=TTS_MODEL, output_audio_codec="wav",
+                )
+                audio = base64.b64decode(res.audios[0])
+            except Exception as exc2:  # noqa: BLE001
+                raise HTTPException(status_code=502, detail=f"text-to-speech failed: {type(exc2).__name__}") from exc2
+        else:
+            raise HTTPException(status_code=502, detail="text-to-speech failed") from None
     return Response(content=audio, media_type="audio/wav")
 
 
