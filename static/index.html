@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Snapdeal · Mini AI Voice KAM (Sarvam)</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+    --ink:#e8ebf0; --muted:#9aa4b2; --accent:#e8402a; --accent2:#ff7a59;
+    --ok:#2fbf71; --warn:#f0b429; --bad:#e5484d; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background:radial-gradient(1200px 600px at 15% -10%,#1b2330 0%,var(--bg) 55%);color:var(--ink)}
+  header{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line);
+         background:rgba(15,17,21,.85);backdrop-filter:blur(8px);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+  .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+        display:grid;place-items:center;font-weight:800;font-size:15px;color:#fff}
+  h1{font-size:15px;margin:0;font-weight:700}
+  .sub{font-size:12px;color:var(--muted)}
+  .pill{font-size:11px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);
+        color:var(--muted);background:var(--panel);white-space:nowrap}
+  .pill b{color:var(--ink);font-weight:600}
+  .pill.on{border-color:#2a5a3f;color:#9fe7bf;background:#12211a}
+  .pill.off{border-color:#5a2a2a;color:#f0a9ab;background:#211313}
+  main{display:grid;grid-template-columns:1.35fr .9fr;gap:16px;padding:16px 20px 26px;max-width:1240px;margin:0 auto}
+  @media(max-width:900px){main{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .card h2{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);
+           margin:0;padding:12px 16px;border-bottom:1px solid var(--line);font-weight:700}
+  #transcript{height:min(52vh,430px);overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+  .msg{max-width:88%;padding:10px 13px;border-radius:12px;font-size:14px;animation:pop .18s ease-out}
+  @keyframes pop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .msg.bot{background:var(--panel2);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
+  .msg.user{background:linear-gradient(135deg,#2a1a16,#33201a);border:1px solid #4a2b23;align-self:flex-end;border-bottom-right-radius:4px}
+  .msg .who{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+  .controls{display:flex;flex-wrap:wrap;gap:9px;padding:12px 16px;border-top:1px solid var(--line);align-items:center}
+  button{font:inherit;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);
+         padding:9px 14px;cursor:pointer;transition:.15s}
+  button:hover{border-color:#3a4250;background:#242935}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .mic{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-weight:700;
+       padding:12px 20px;display:flex;align-items:center;gap:9px}
+  .mic.listening{animation:pulse 1.4s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(232,64,42,.55)}70%{box-shadow:0 0 0 16px rgba(232,64,42,0)}100%{box-shadow:0 0 0 0 rgba(232,64,42,0)}}
+  .dot{width:9px;height:9px;border-radius:50%;background:#fff;opacity:.9}
+  input[type=text],select{font:inherit;background:var(--panel2);border:1px solid var(--line);
+        color:var(--ink);border-radius:9px;padding:9px 11px;min-width:0}
+  .row{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+  .row input{flex:1}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  td{padding:7px 16px;border-bottom:1px solid var(--line);color:var(--muted)}
+  td:last-child{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums;font-weight:600}
+  .delta{font-size:11.5px;font-weight:700;padding:2px 7px;border-radius:999px;margin-left:6px}
+  .up{background:#12291d;color:#7ee2a8} .down{background:#2a1416;color:#f0a0a3} .flat{background:#20242c;color:var(--muted)}
+  .diag{padding:12px 16px;border-top:1px solid var(--line)}
+  .chip{display:inline-block;font-size:12px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);
+        margin:0 6px 6px 0;background:var(--panel2)}
+  .chip.bad{border-color:#5a2a2a;color:#f0a9ab}
+  .chip.warn{border-color:#5a4a1a;color:#f0cd7a}
+  .chip.ok{border-color:#2a5a3f;color:#9fe7bf}
+  .note{font-size:11.5px;color:var(--muted);padding:0 16px 14px}
+  .rec{padding:10px 16px;border-top:1px solid var(--line);font-size:13.5px}
+  .rec span{color:var(--muted)} .rec .imp{display:block;font-size:12px;color:#9fe7bf;margin-top:3px}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#211313;border:1px solid #5a2a2a;
+         color:#f0a9ab;padding:10px 16px;border-radius:10px;font-size:13px;display:none;z-index:9;max-width:90vw}
+  .status{font-size:12px;color:var(--muted);padding:0 16px 10px;min-height:18px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">S</div>
+  <div><h1>Mini AI Voice KAM</h1><div class="sub">Snapdeal · powered by Sarvam</div></div>
+  <div style="flex:1"></div>
+  <span class="pill" id="pillStt">STT: <b>Saaras</b></span>
+  <span class="pill" id="pillLlm">LLM: <b>Sarvam-105B</b></span>
+  <span class="pill" id="pillTts">TTS: <b>Bulbul</b></span>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Conversation</h2>
+    <div id="transcript"></div>
+    <div class="status" id="status">Tap “Start talking” and speak as the seller.</div>
+    <div class="controls">
+      <button class="mic" id="micBtn"><span class="dot"></span><span id="micLabel">Start talking</span></button>
+      <button id="stopBtn">Stop speaking</button>
+      <button id="demoBtn">Play demo</button>
+      <button id="resetBtn">Reset</button>
+      <select id="langSel" title="Voice language">
+        <option value="en-IN">English</option>
+        <option value="hi-IN">हिन्दी</option>
+      </select>
+    </div>
+    <div class="row">
+      <input type="text" id="typeInput" placeholder="Or type your message…" />
+      <button id="sendBtn">Send</button>
+    </div>
+  </section>
+
+  <aside style="display:flex;flex-direction:column;gap:16px">
+    <section class="card">
+      <h2>Seller data · last vs this month</h2>
+      <table id="dataTable"></table>
+      <div class="note">Mock data supplied with the assignment.</div>
+    </section>
+    <section class="card">
+      <h2>Live diagnosis</h2>
+      <div class="diag" id="diag"><span class="chip">Waiting for the seller's concern…</span></div>
+      <div id="recs"></div>
+    </section>
+  </aside>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const state = { messages: [], busy: false, recording: false, media: null, rec: null, chunks: [], audio: null, lang: "en-IN" };
+
+const inr = n => "₹" + Number(n).toLocaleString("en-IN");
+function toast(m){ const t=$("#toast"); t.textContent=m; t.style.display="block";
+  clearTimeout(toast._t); toast._t=setTimeout(()=>t.style.display="none",5000); }
+function status(s){ $("#status").textContent = s; }
+function addMsg(who, text, cls){
+  const el=document.createElement("div");
+  el.className="msg "+(cls||(who==="You"?"user":"bot"));
+  el.innerHTML='<span class="who">'+who+'</span>';
+  el.appendChild(document.createTextNode(text));
+  $("#transcript").appendChild(el);
+  $("#transcript").scrollTop=$("#transcript").scrollHeight;
+  return el;
+}
+function stopAudio(){ if(state.audio){ state.audio.pause(); state.audio.currentTime=0; state.audio=null; } }
+
+/* ---------- speak via Sarvam Bulbul ---------- */
+async function speak(text, lang){
+  try{
+    status("Speaking…");
+    const r = await fetch("/api/tts", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({text, lang})});
+    if(!r.ok) throw new Error("tts "+r.status);
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    stopAudio();
+    const a = new Audio(url); state.audio = a;
+    await new Promise(res => { a.onended = res; a.onerror = res; a.play().catch(res); });
+    URL.revokeObjectURL(url);
+  }catch(e){ console.warn(e); }
+  finally{ status(""); }
+}
+
+/* ---------- chat via Sarvam-105B ---------- */
+async function send(text){
+  if(!text || state.busy) return;
+  state.busy = true; $("#sendBtn").disabled = true; $("#micBtn").disabled = true;
+  addMsg("You", text);
+  state.messages.push({role:"user", content:text});
+  status("Thinking…");
+  try{
+    const r = await fetch("/api/chat", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({messages: state.messages, lang: state.lang})});
+    if(!r.ok){ const d = await r.json().catch(()=>({})); throw new Error(d.detail||("chat "+r.status)); }
+    const j = await r.json();
+    state.messages.push({role:"assistant", content:j.reply});
+    addMsg("Aria", j.reply);
+    renderDiag(j.diagnosis, j.recommendations);
+    await speak(j.reply, state.lang);
+  }catch(e){
+    toast("Sarvam call failed: "+e.message);
+    addMsg("System", "I couldn't reach the model just now — please try again.", "bot");
+  }finally{
+    state.busy=false; $("#sendBtn").disabled=false; $("#micBtn").disabled=false; status("");
+  }
+}
+
+/* ---------- speech-to-text via Sarvam Saaras ---------- */
+async function startRecording(){
+  try{
+    state.media = await navigator.mediaDevices.getUserMedia({audio:true});
+  }catch(e){ toast("Microphone blocked — allow it, or type below."); return; }
+  stopAudio();                        // barge-in
+  state.chunks = [];
+  const mime = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "";
+  state.rec = new MediaRecorder(state.media, mime ? {mimeType:mime} : undefined);
+  state.rec.ondataavailable = e => { if(e.data.size) state.chunks.push(e.data); };
+  state.rec.onstop = async () => {
+    state.media.getTracks().forEach(t=>t.stop());
+    const blob = new Blob(state.chunks, {type:"audio/webm"});
+    if(blob.size < 1200){ status(""); return; }
+    status("Transcribing…");
+    try{
+      const fd = new FormData(); fd.append("file", blob, "speech.webm");
+      const r = await fetch("/api/stt?lang=unknown", {method:"POST", body:fd});
+      if(!r.ok) throw new Error("stt "+r.status);
+      const j = await r.json();
+      const t = (j.transcript||"").trim();
+      if(!t){ toast("Didn't catch that — try again."); status(""); return; }
+      await send(t);
+    }catch(e){ toast("Transcription failed: "+e.message); status(""); }
+  };
+  state.rec.start();
+  state.recording = true;
+  $("#micBtn").classList.add("listening");
+  $("#micLabel").textContent = "Listening… tap to stop";
+  status("Listening…");
+}
+function stopRecording(){
+  if(state.rec && state.recording){ state.rec.stop(); }
+  state.recording = false;
+  $("#micBtn").classList.remove("listening");
+  $("#micLabel").textContent = "Start talking";
+}
+
+/* ---------- panels ---------- */
+function renderData(){
+  const rows = [
+    ["Sales", 200000, 135000, -32.5, "₹"],
+    ["Orders", 400, 270, -32.5, ""],
+    ["Cancellation rate", 8, 14, 75.0, "%"],
+    ["Average selling price", 500, 500, 0.0, "₹"],
+    ["Out-of-stock SKUs", 5, 18, 260.0, ""],
+  ];
+  $("#dataTable").innerHTML = rows.map(([label,a,b,pct,u])=>{
+    const cls = Math.abs(pct)<1?"flat":pct>0?"up":"down";
+    const f = v => u==="₹" ? inr(v) : (v+u);
+    return `<tr><td>${label}</td><td>${f(a)} → ${f(b)}<span class="delta ${cls}">${pct>0?"+":""}${pct.toFixed(1)}%</span></td></tr>`;
+  }).join("");
+}
+function renderDiag(d, recs){
+  if(!d) return;
+  const chips = (d.signals||[]).map(s=>`<span class="chip ${s.level}">${s.text}</span>`).join("");
+  $("#diag").innerHTML = chips + `<div style="margin-top:8px;font-size:13px;color:#cfd6e0">Most likely: <b>${d.primary}</b> · confidence ${d.confidence}</div>`;
+  $("#recs").innerHTML = (recs||[]).map((r,i)=>
+    `<div class="rec"><b>${i+1}. ${r.title}</b> <span>— ${r.why}</span><span class="imp">${r.impact}</span></div>`).join("");
+}
+
+/* ---------- controls ---------- */
+$("#micBtn").addEventListener("click", ()=>{
+  if(state.busy) return;
+  if(state.recording) stopRecording(); else startRecording();
+});
+$("#stopBtn").addEventListener("click", ()=>{ stopAudio(); status(""); });
+$("#sendBtn").addEventListener("click", ()=>{ const v=$("#typeInput").value.trim(); $("#typeInput").value=""; send(v); });
+$("#typeInput").addEventListener("keydown", e=>{ if(e.key==="Enter") $("#sendBtn").click(); });
+$("#langSel").addEventListener("change", e=>{ state.lang = e.target.value; });
+
+$("#resetBtn").addEventListener("click", ()=>{
+  stopRecording(); stopAudio();
+  state.messages=[]; state.busy=false;
+  $("#transcript").innerHTML="";
+  $("#diag").innerHTML='<span class="chip">Waiting for the seller\'s concern…</span>';
+  $("#recs").innerHTML="";
+  startCall();
+});
+
+/* the seller "calls in" — one synthetic turn so the model opens the call */
+async function startCall(){
+  state.messages=[{role:"user", content:"(The seller has just connected to the call.)"}];
+  status("Connecting…");
+  try{
+    const r = await fetch("/api/chat", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({messages: state.messages, lang: state.lang})});
+    if(!r.ok) throw new Error("chat "+r.status);
+    const j = await r.json();
+    state.messages.push({role:"assistant", content:j.reply});
+    addMsg("Aria", j.reply);
+    renderDiag(j.diagnosis, j.recommendations);
+    await speak(j.reply, state.lang);
+  }catch(e){ toast("Could not start the call: "+e.message); }
+  finally{ status(""); }
+}
+
+/* ---------- demo: real Sarvam calls, scripted seller turns ---------- */
+const DEMO = [
+  "Hi, my sales have dropped significantly this month and I don't understand why. Can you help?",
+  "No, I haven't changed prices or run any offers.",
+  "Actually yes, a few of my top products are showing out of stock.",
+  "Yes, cancellations have gone up quite a bit this month.",
+  "Why do you think it's stock and not pricing?",
+  "That makes sense, thank you."
+];
+$("#demoBtn").addEventListener("click", async ()=>{
+  if(state.busy) return;
+  stopRecording(); stopAudio();
+  state.messages=[]; $("#transcript").innerHTML="";
+  await startCall();
+  for(const line of DEMO){
+    await send(line);
+    await new Promise(r=>setTimeout(r, 350));
+  }
+});
+
+/* ---------- boot ---------- */
+renderData();
+fetch("/api/health").then(r=>r.json()).then(j=>{
+  $("#pillStt").innerHTML = "STT: <b>"+j.stt+"</b>";
+  $("#pillLlm").innerHTML = "LLM: <b>"+j.chat+"</b>";
+  $("#pillTts").innerHTML = "TTS: <b>"+j.tts+"</b>";
+}).catch(()=>{});
+if(!navigator.mediaDevices){
+  toast("This browser cannot record audio — use Chrome or Edge. Typing still works.");
+}
+startCall();
+</script>
+</body>
+</html>
