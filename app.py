@@ -49,14 +49,14 @@ client = SarvamAI(api_subscription_key=_KEY)
 CHAT_MODEL = "sarvam-105b-conversations"
 STT_MODEL = "saaras:v3"
 TTS_MODEL = "bulbul:v3"
-SPEAKER = {"hi-IN": "ritu_hi_customer", "en-IN": "ishita_en_customer", "bn-IN": "priya",
-           "ta-IN": "priya", "te-IN": "kavitha_te_conversation", "mr-IN": "ishita_mr_conversational",
-           "gu-IN": "pooja_gu_customer", "kn-IN": "chaitra_kn_conversation",
-           "ml-IN": "priya", "pa-IN": "anand_pa_customer", "or-IN": "priya"}
+# bulbul:v3 speaker names (the *_hi_customer style names are v2-only and 400 on v3)
+SPEAKER = {"hi-IN": "ritu", "en-IN": "ishita", "te-IN": "kavitha", "mr-IN": "priya",
+           "bn-IN": "priya", "gu-IN": "priya", "kn-IN": "priya", "ml-IN": "priya",
+           "pa-IN": "priya", "od-IN": "priya"}
 # Fallback map: generic speaker per language for codes without a specialised voice
 SPEAKER_FALLBACK = {"hi-IN": "priya", "en-IN": "ishita", "bn-IN": "priya", "ta-IN": "priya",
                     "te-IN": "priya", "mr-IN": "priya", "gu-IN": "priya", "kn-IN": "priya",
-                    "ml-IN": "priya", "pa-IN": "priya", "or-IN": "priya"}
+                    "ml-IN": "priya", "pa-IN": "priya", "od-IN": "priya"}
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC = BASE_DIR / "static"
